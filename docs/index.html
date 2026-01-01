@@ -1,0 +1,985 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>咩咩旅行日志</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#121a2b; --muted:#93a4c7; --text:#eaf1ff;
+      --accent:#6aa6ff; --danger:#ff6a7a; --ok:#44d7b6; --line:#22304f;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      color-scheme: dark;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;
+      background: radial-gradient(1200px 800px at 20% -10%, rgba(106,166,255,.25), transparent 60%),
+                  radial-gradient(900px 700px at 90% 10%, rgba(68,215,182,.18), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    a{color:var(--accent); text-decoration:none}
+    .wrap{max-width:1180px; margin:0 auto; padding:18px 16px 28px;}
+    header{display:flex; gap:14px; align-items:center; justify-content:space-between; margin-bottom:14px;}
+    .brand{display:flex; gap:12px; align-items:center;}
+    .logo{width:42px; height:42px; border-radius:14px; background:linear-gradient(135deg, rgba(106,166,255,.95), rgba(68,215,182,.85)); box-shadow:var(--shadow);}
+    .title h1{margin:0; font-size:18px; letter-spacing:.3px}
+    .title p{margin:2px 0 0; color:var(--muted); font-size:12px}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
+    button,.btn{
+      border:1px solid var(--line); background:rgba(18,26,43,.85); color:var(--text);
+      padding:10px 12px; border-radius:12px; cursor:pointer;
+      transition:transform .08s ease,border-color .15s ease,background .15s ease;
+      display:inline-flex; align-items:center; gap:8px; font-weight:600; user-select:none;
+    }
+    button:hover{border-color: rgba(106,166,255,.55)}
+    button:active{transform: translateY(1px)}
+    .primary{background: rgba(106,166,255,.18); border-color: rgba(106,166,255,.5)}
+    .danger{background: rgba(255,106,122,.12); border-color: rgba(255,106,122,.45)}
+    .ok{background: rgba(68,215,182,.12); border-color: rgba(68,215,182,.45)}
+    .ghost{background: transparent}
+    .grid{display:grid; grid-template-columns:1.05fr .95fr; gap:14px; align-items:start;}
+    @media (max-width:980px){.grid{grid-template-columns:1fr}}
+    .panel{
+      background: rgba(18,26,43,.72); border:1px solid var(--line);
+      border-radius: var(--radius); box-shadow: var(--shadow); overflow:hidden;
+    }
+    .panel .head{
+      padding:12px 12px 10px; border-bottom:1px solid var(--line);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      background: rgba(18,26,43,.85);
+    }
+    .panel .head h2{margin:0; font-size:14px}
+    .panel .head .sub{color:var(--muted); font-size:12px}
+    .panel .body{padding:12px}
+    .controls{display:grid; grid-template-columns:1fr 170px 160px; gap:10px; margin-bottom:12px;}
+    @media (max-width:980px){.controls{grid-template-columns:1fr 1fr}.controls .span2{grid-column:span 2;}}
+    input,select,textarea{
+      width:100%; background: rgba(11,18,32,.55); border:1px solid var(--line);
+      color: var(--text); padding:10px; border-radius:12px; outline:none;
+    }
+    textarea{min-height:220px; resize:vertical; line-height:1.55}
+    input:focus,select:focus,textarea:focus{border-color: rgba(106,166,255,.6); box-shadow:0 0 0 3px rgba(106,166,255,.12);}
+    .hint{color:var(--muted); font-size:12px; margin-top:6px}
+    .list{display:flex; flex-direction:column; gap:10px;}
+    .card{
+      border:1px solid var(--line); background: rgba(11,18,32,.35);
+      border-radius:16px; padding:12px; cursor:pointer;
+      transition:border-color .15s ease, transform .08s ease, background .15s ease;
+    }
+    .card:hover{border-color: rgba(106,166,255,.55)}
+    .card:active{transform: translateY(1px)}
+    .card.active{
+      border-color: rgba(68,215,182,.65);
+      box-shadow:0 0 0 3px rgba(68,215,182,.12);
+      background: rgba(68,215,182,.06);
+    }
+    .meta{display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--muted); font-size:12px;}
+    .card h3{margin:8px 0; font-size:14px}
+    .tags{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+    .tag{font-size:12px; color:#dfe9ff; background: rgba(106,166,255,.12); border:1px solid rgba(106,166,255,.25); padding:4px 8px; border-radius:999px;}
+    .tag.alt{background: rgba(68,215,182,.10); border-color: rgba(68,215,182,.25)}
+    .excerpt{color:#cfe0ff; opacity:.9; font-size:12.5px; line-height:1.55}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;}
+    @media (max-width:520px){.row{grid-template-columns:1fr}}
+    .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px;}
+    @media (max-width:720px){.row3{grid-template-columns:1fr 1fr}.row3 .span2{grid-column:span 2;}}
+    .toolbar{display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; justify-content:space-between;}
+    .toolbar .left,.toolbar .right{display:flex; gap:10px; flex-wrap:wrap}
+    .photos{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:10px;}
+    @media (max-width:720px){.photos{grid-template-columns:repeat(2,1fr)}}
+    .photo{border:1px solid var(--line); border-radius:14px; overflow:hidden; background: rgba(11,18,32,.35); aspect-ratio:1.2/1; display:flex; align-items:center; justify-content:center; position:relative;}
+    .photo img{width:100%; height:100%; object-fit:cover; display:block}
+    .photo .x{position:absolute; top:8px; right:8px; border:1px solid rgba(255,106,122,.55); background: rgba(255,106,122,.12); color:var(--text); border-radius:10px; padding:4px 7px; font-size:12px; cursor:pointer;}
+    .empty{color:var(--muted); padding:22px 12px; text-align:center;}
+    footer{margin-top:14px; color:var(--muted); font-size:12px; text-align:center; opacity:.85;}
+    .sep{height:1px; background: var(--line); margin:10px 0}
+    .badge{font-size:12px; color:#dfe9ff; border:1px solid rgba(147,164,199,.3); background: rgba(147,164,199,.08); padding:4px 8px; border-radius:999px; white-space:nowrap;}
+  
+/* ===== 粉色卡通风格主题（可继续改色） ===== */
+:root{
+  color-scheme: light;
+  --bg:#fff3f8;
+  --card:#ffffff;
+  --muted:#a36a86;
+  --text:#3b1f2a;
+  --accent:#ff5fa2;
+  --danger:#ff4d6d;
+  --ok:#ff8ac6;
+  --line:#ffd1e4;
+  --shadow: 0 10px 22px rgba(255, 95, 162, .18);
+  --radius:22px;
+}
+body{
+  background:
+    radial-gradient(900px 600px at 15% 0%, rgba(255, 95, 162, .22), transparent 58%),
+    radial-gradient(900px 600px at 85% 10%, rgba(255, 184, 216, .35), transparent 58%),
+    radial-gradient(700px 520px at 40% 110%, rgba(255, 225, 239, .9), transparent 55%),
+    var(--bg) !important;
+  color: var(--text) !important;
+}
+/* 让整体更“卡通”：更圆、更柔和、更亮 */
+.panel{
+  background: rgba(255,255,255,.86) !important;
+  border: 2px solid var(--line) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow) !important;
+}
+.panel .head{
+  background: linear-gradient(180deg, rgba(255, 225, 239, .9), rgba(255,255,255,.7)) !important;
+  border-bottom: 2px solid var(--line) !important;
+}
+.card{
+  background: rgba(255, 255, 255, .92) !important;
+  border: 2px solid var(--line) !important;
+  border-radius: 22px !important;
+}
+.card:hover{ border-color: rgba(255, 95, 162, .55) !important; }
+.card.active{
+  border-color: rgba(255, 95, 162, .65) !important;
+  box-shadow: 0 0 0 4px rgba(255, 95, 162, .14) !important;
+  background: rgba(255, 95, 162, .06) !important;
+}
+button,.btn{
+  border: 2px solid var(--line) !important;
+  background: rgba(255,255,255,.88) !important;
+  color: var(--text) !important;
+  border-radius: 18px !important;
+}
+.primary{
+  background: linear-gradient(180deg, rgba(255, 95, 162, .22), rgba(255, 95, 162, .10)) !important;
+  border-color: rgba(255, 95, 162, .55) !important;
+}
+.ok{
+  background: linear-gradient(180deg, rgba(255, 138, 198, .28), rgba(255, 138, 198, .12)) !important;
+  border-color: rgba(255, 138, 198, .55) !important;
+}
+.danger{
+  background: linear-gradient(180deg, rgba(255, 77, 109, .20), rgba(255, 77, 109, .10)) !important;
+  border-color: rgba(255, 77, 109, .55) !important;
+}
+input,select,textarea{
+  background: rgba(255, 240, 248, .9) !important;
+  border: 2px solid var(--line) !important;
+  color: var(--text) !important;
+  border-radius: 18px !important;
+}
+input:focus,select:focus,textarea:focus{
+  border-color: rgba(255, 95, 162, .65) !important;
+  box-shadow: 0 0 0 4px rgba(255, 95, 162, .16) !important;
+}
+.tag{
+  background: rgba(255, 95, 162, .12) !important;
+  border: 2px solid rgba(255, 95, 162, .20) !important;
+  color: var(--text) !important;
+}
+.tag.alt{
+  background: rgba(255, 184, 216, .20) !important;
+  border-color: rgba(255, 184, 216, .35) !important;
+}
+.badge{
+  background: rgba(255, 225, 239, .85) !important;
+  border: 2px solid var(--line) !important;
+  color: var(--text) !important;
+}
+.logo{
+  border-radius: 18px !important;
+  background: linear-gradient(135deg, #ff7bbd, #ffd1e6) !important;
+  box-shadow: var(--shadow) !important;
+}
+/* 让顶部更可爱一点：轻微“贴纸”效果 */
+header{
+  padding: 8px 10px;
+  border-radius: 24px;
+  background: rgba(255,255,255,.55);
+  border: 2px solid rgba(255, 209, 228, .75);
+  box-shadow: 0 12px 28px rgba(255, 95, 162, .10);
+}
+footer{ color: rgba(163,106,134,.95) !important; }
+
+
+/* ===== 头像样式 ===== */
+.avatar{
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+}
+.avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:none;
+}
+.avatarHint{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  color:#fff;
+  background:rgba(255,95,162,.35);
+  opacity:0;
+  transition:.2s;
+  text-align:center;
+  padding:4px;
+}
+.avatar:hover .avatarHint{opacity:1;}
+
+
+/* ===== Mobile polish overrides (added) ===== */
+:root{
+  --radius: 18px;
+}
+html, body{
+  -webkit-text-size-adjust: 100%;
+}
+body{
+  line-height: 1.65;
+}
+h1{letter-spacing:.2px}
+button, .btn{
+  min-height: 44px; /* touch target */
+  padding: 12px 14px;
+}
+input, select, textarea{
+  font-size: 16px; /* prevent iOS zoom */
+}
+textarea{min-height: 140px}
+.actions{
+  gap:10px;
+  flex-wrap: wrap;
+}
+.actions button, .actions .btn{
+  flex: 1 1 auto;
+}
+.brand .title h1{
+  font-size: 18px;
+}
+.panel .head{
+  padding: 14px 14px;
+}
+.panel .body{
+  padding: 14px 14px 16px;
+}
+
+/* nicer form spacing */
+.form{
+  gap:12px;
+}
+.field label{
+  font-size: 13px;
+}
+.field input, .field select, .field textarea{
+  border-radius: 14px;
+  padding: 12px 12px;
+}
+
+/* photos: better on small screens */
+.photos{grid-template-columns:repeat(3,1fr)}
+@media (max-width:420px){
+  .photos{grid-template-columns:repeat(2,1fr)}
+}
+
+/* Mobile: single-column + view switch */
+@media (max-width: 860px){
+  .grid{grid-template-columns:1fr}
+  .wrap[data-view="list"] .editPanel{display:none}
+  .wrap[data-view="edit"] .listPanel{display:none}
+
+  /* leave room for bottom nav */
+  body{padding-bottom: calc(76px + env(safe-area-inset-bottom));}
+}
+
+/* Bottom nav */
+.mnav{
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  display: none;
+  gap: 10px;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(10, 16, 30, .72);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(255,255,255,.08);
+  z-index: 50;
+}
+.mnav .mnavBtn{
+  flex:1;
+  border-radius: 16px;
+  font-weight: 700;
+}
+@media (max-width: 860px){
+  .mnav{display:flex;}
+}
+
+/* Light theme (optional) */
+:root[data-theme="light"]{
+  --bg:#fff6fb; --card:#ffffff; --muted:#586176; --line: rgba(30, 35, 50, .12);
+  --text:#111827;
+  --shadow: 0 18px 50px rgba(17,24,39,.08);
+}
+:root[data-theme="light"] body{
+  color: var(--text);
+}
+:root[data-theme="light"] .panel{
+  background: rgba(255,255,255,.82);
+}
+:root[data-theme="light"] .mnav{
+  background: rgba(255,255,255,.78);
+  border-top: 1px solid rgba(17,24,39,.10);
+}
+</style>
+
+<!-- PWA / Mobile -->
+  <meta name="theme-color" content="#ff4fa0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="咩咩日志">
+  <link rel="manifest" href="./manifest.json">
+
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        
+    <label class="logo avatar">
+      <input id="avatarInput" type="file" accept="image/*" hidden>
+      <img id="avatarImg" alt="avatar" />
+      <span class="avatarHint">点我换头像</span>
+    </label>
+    
+        <div class="title">
+          <h1>咩咩旅行日志</h1>
+          
+        </div>
+      </div>
+      <div class="actions">
+      <button id="btnTheme" title="切换主题">🌗 主题</button>
+        <button class="primary" id="btnNew">➕ 新建日志</button>
+        <button id="btnExport">⬇️ 导出</button>
+        <label class="btn ok" for="fileImport">⬆️ 导入</label>
+        <input id="fileImport" type="file" accept="application/json" hidden>
+        <button class="danger" id="btnReset">🧹 清空</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="panel listPanel">
+        <div class="head">
+          <div>
+            <h2>日志列表</h2>
+            <div class="sub" id="listSub">0 条</div>
+          </div>
+          <span class="badge" id="storageBadge">本地保存</span>
+        </div>
+        <div class="body">
+          <div class="controls">
+            <input id="q" placeholder="搜索：标题/地点/正文/标签…" />
+            <select id="sort">
+              <option value="new">排序：最新</option>
+              <option value="old">排序：最早</option>
+              <option value="rate">排序：评分高</option>
+            </select>
+            <select id="tagFilter">
+              <option value="">筛选：全部标签</option>
+            </select>
+          </div>
+
+          <div class="list" id="list"></div>
+          <div class="empty" id="emptyList" style="display:none;">
+            还没有日志。点右上角「新建日志」开始记录吧～
+          </div>
+        </div>
+      </section>
+
+      <section class="panel editPanel">
+        <div class="head">
+          <div>
+            <h2>编辑日志</h2>
+            <div class="sub" id="editSub">未选择</div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="ghost" id="btnDuplicate" title="复制一条作为新日志">📌 复制</button>
+            <button class="danger" id="btnDelete" title="删除当前日志">🗑️ 删除</button>
+          </div>
+        </div>
+        <div class="body">
+          <div class="row">
+            <div>
+              <label class="hint">标题</label>
+              <input id="title" placeholder="例如：京都红叶三日｜北海道雪夜" />
+            </div>
+            <div>
+              <label class="hint">日期</label>
+              <input id="date" type="date" />
+            </div>
+          </div>
+
+          <div class="row3">
+            <div>
+              <label class="hint">地点</label>
+              <input id="place" placeholder="例如：日本·京都" />
+            </div>
+            <div>
+              <label class="hint">评分（1-5）</label>
+              <select id="rating">
+                <option value="5">★★★★★ 5</option>
+                <option value="4">★★★★☆ 4</option>
+                <option value="3">★★★☆☆ 3</option>
+                <option value="2">★★☆☆☆ 2</option>
+                <option value="1">★☆☆☆☆ 1</option>
+              </select>
+            </div>
+            <div class="span2">
+              <label class="hint">标签（用逗号分隔）</label>
+              <input id="tags" placeholder="例如：美食, 红叶, 亲子, 省钱攻略" />
+            </div>
+          </div>
+
+          <label class="hint">心得正文</label>
+          <textarea id="content" placeholder="写下当天的行程、感受、踩雷点、推荐清单…"></textarea>
+
+          <div class="sep"></div>
+
+          <div>
+            <label class="hint">照片（本地选择后会转成浏览器内保存的数据，适合少量精选图）</label>
+            <div class="toolbar">
+              <div class="left">
+                <label class="btn ok" for="photoInput">🖼️ 添加照片</label>
+                <input id="photoInput" type="file" accept="image/*" multiple hidden />
+                <button id="btnClearPhotos" class="danger">🧽 清空照片</button>
+              </div>
+              <div class="right">
+                <button id="btnSave" class="primary">💾 保存</button>
+              </div>
+            </div>
+
+            <div class="photos" id="photos"></div>
+            <div class="hint" id="photoHint">
+              提示：照片会占用 localStorage 空间（不同浏览器上限不同），建议每条日志不超过 6 张、单张压缩后更稳。
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      数据仅保存在你的浏览器中（localStorage）。建议定期「导出」备份为 JSON。
+    </footer>
+  </div>
+
+  <script>
+    const KEY = "travel_journal_v1";
+    const uid = () => Math.random().toString(36).slice(2, 10) + "-" + Date.now().toString(36);
+
+    function loadAll(){
+      try{
+        const raw = localStorage.getItem(KEY);
+        if(!raw) return [];
+        const data = JSON.parse(raw);
+        if(!Array.isArray(data)) return [];
+        return data;
+      }catch(e){
+        console.error(e);
+        return [];
+      }
+    }
+    function saveAll(items){
+      localStorage.setItem(KEY, JSON.stringify(items));
+      updateStorageBadge();
+    }
+    function updateStorageBadge(){
+      const bytes = (localStorage.getItem(KEY) || "").length;
+      const kb = Math.round(bytes / 1024);
+      storageBadge.textContent = `本地保存 · ~${kb} KB`;
+    }
+
+    let items = loadAll();
+    let activeId = null;
+
+    const listEl = document.getElementById("list");
+    const emptyList = document.getElementById("emptyList");
+    const listSub = document.getElementById("listSub");
+    const storageBadge = document.getElementById("storageBadge");
+
+    const qEl = document.getElementById("q");
+    const sortEl = document.getElementById("sort");
+    const tagFilterEl = document.getElementById("tagFilter");
+
+    const editSub = document.getElementById("editSub");
+    const titleEl = document.getElementById("title");
+    const dateEl = document.getElementById("date");
+    const placeEl = document.getElementById("place");
+    const ratingEl = document.getElementById("rating");
+    const tagsEl = document.getElementById("tags");
+    const contentEl = document.getElementById("content");
+
+    const photosEl = document.getElementById("photos");
+    const photoInput = document.getElementById("photoInput");
+
+    const btnNew = document.getElementById("btnNew");
+    const btnSave = document.getElementById("btnSave");
+    const btnDelete = document.getElementById("btnDelete");
+    const btnDuplicate = document.getElementById("btnDuplicate");
+    const btnClearPhotos = document.getElementById("btnClearPhotos");
+
+    const btnExport = document.getElementById("btnExport");
+    const fileImport = document.getElementById("fileImport");
+    const btnReset = document.getElementById("btnReset");
+
+    const norm = (s) => (s || "").toString().trim();
+    const parseTags = (s) => norm(s).split(/[,，]/).map(x => x.trim()).filter(Boolean).slice(0, 20);
+    const stars = (n) => "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5-n);
+
+    function byId(id){ return items.find(x => x.id === id); }
+    function ensureActive(){ if(activeId && byId(activeId)) return; activeId = items[0]?.id || null; }
+
+    function currentForm(){
+      return {
+        title: norm(titleEl.value),
+        date: dateEl.value || "",
+        place: norm(placeEl.value),
+        rating: Number(ratingEl.value || 5),
+        tags: parseTags(tagsEl.value),
+        content: norm(contentEl.value),
+      };
+    }
+
+    function fillForm(item){
+      if(!item){
+        editSub.textContent = "未选择";
+        titleEl.value = ""; dateEl.value = ""; placeEl.value = "";
+        ratingEl.value = "5"; tagsEl.value = ""; contentEl.value = "";
+        photosEl.innerHTML = "";
+        return;
+      }
+      editSub.textContent = `正在编辑：${item.title || "未命名"}`;
+      titleEl.value = item.title || "";
+      dateEl.value = item.date || "";
+      placeEl.value = item.place || "";
+      ratingEl.value = String(item.rating || 5);
+      tagsEl.value = (item.tags || []).join(", ");
+      contentEl.value = item.content || "";
+      renderPhotos(item);
+    }
+
+    function renderPhotos(item){
+      const photos = item.photos || [];
+      photosEl.innerHTML = "";
+      if(photos.length === 0){ photosEl.innerHTML = `<div class="hint">暂无照片</div>`; return; }
+      photos.forEach((p, idx) => {
+        const div = document.createElement("div");
+        div.className = "photo";
+        div.innerHTML = `<img alt="photo" src="${p}" /><button class="x" title="删除这张">✕</button>`;
+        div.querySelector(".x").onclick = (e) => {
+          e.stopPropagation();
+          const it = byId(activeId); if(!it) return;
+          it.photos = (it.photos || []).filter((_, i) => i !== idx);
+          it.updatedAt = Date.now();
+          saveAll(items);
+          renderPhotos(it);
+          renderList();
+        };
+        photosEl.appendChild(div);
+      });
+    }
+
+    function escapeHtml(s){
+      return (s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+    }
+
+    function buildTagOptions(){
+      const set = new Set();
+      items.forEach(it => (it.tags || []).forEach(t => set.add(t)));
+      const current = tagFilterEl.value;
+      tagFilterEl.innerHTML = `<option value="">筛选：全部标签</option>` + [...set].sort((a,b)=>a.localeCompare(b,'zh')).map(t =>
+        `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`
+      ).join("");
+      tagFilterEl.value = current;
+    }
+
+    function getFiltered(){
+      const q = norm(qEl.value).toLowerCase();
+      const tag = tagFilterEl.value;
+      let arr = [...items];
+      if(q){
+        arr = arr.filter(it => {
+          const hay = [it.title, it.place, it.content, (it.tags||[]).join(" ")].join(" ").toLowerCase();
+          return hay.includes(q);
+        });
+      }
+      if(tag) arr = arr.filter(it => (it.tags || []).includes(tag));
+      const sort = sortEl.value;
+      arr.sort((a,b) => {
+        if(sort === "new") return (b.date || "").localeCompare(a.date || "") || (b.updatedAt||0)-(a.updatedAt||0);
+        if(sort === "old") return (a.date || "").localeCompare(b.date || "") || (a.updatedAt||0)-(b.updatedAt||0);
+        if(sort === "rate") return (b.rating||0)-(a.rating||0) || (b.updatedAt||0)-(a.updatedAt||0);
+        return 0;
+      });
+      return arr;
+    }
+
+    function renderList(){
+      buildTagOptions();
+      const arr = getFiltered();
+      listSub.textContent = `${arr.length} 条（总计 ${items.length} 条）`;
+      listEl.innerHTML = "";
+      emptyList.style.display = (arr.length === 0) ? "block" : "none";
+      arr.forEach(it => {
+        const div = document.createElement("div");
+        div.className = "card" + (it.id === activeId ? " active" : "");
+        const excerpt = (it.content || "").slice(0, 80);
+        const tagHtml = (it.tags || []).slice(0, 6).map((t,i) =>
+          `<span class="tag ${i%2? "alt":""}">${escapeHtml(t)}</span>`
+        ).join("");
+        div.innerHTML = `
+          <div class="meta">
+            <span>${escapeHtml(it.date || "未填日期")} · ${escapeHtml(it.place || "未填地点")}</span>
+            <span>${stars(it.rating || 5)}</span>
+          </div>
+          <h3>${escapeHtml(it.title || "未命名日志")}</h3>
+          <div class="excerpt">${escapeHtml(excerpt)}${it.content && it.content.length>80 ? "…" : ""}</div>
+          <div class="tags">${tagHtml}</div>
+        `;
+        div.onclick = () => { activeId = it.id; fillForm(byId(activeId)); renderList(); };
+        listEl.appendChild(div);
+      });
+    }
+
+    btnNew.onclick = () => {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth()+1).padStart(2,"0");
+      const dd = String(today.getDate()).padStart(2,"0");
+      const it = { id: uid(), title: "新旅行日志", date: `${yyyy}-${mm}-${dd}`, place:"", rating:5, tags:[], content:"", photos:[], createdAt:Date.now(), updatedAt:Date.now() };
+      items.unshift(it);
+      activeId = it.id;
+      saveAll(items);
+      fillForm(it);
+      renderList();
+    };
+
+    btnSave.onclick = () => {
+      if(!activeId){ alert("请先新建或选择一条日志。"); return; }
+      const it = byId(activeId); if(!it) return;
+      const f = currentForm();
+      it.title = f.title || "未命名日志";
+      it.date = f.date;
+      it.place = f.place;
+      it.rating = f.rating;
+      it.tags = f.tags;
+      it.content = f.content;
+      it.updatedAt = Date.now();
+      saveAll(items);
+      renderList();
+      fillForm(it);
+      toast("已保存 ✅");
+    };
+
+    btnDelete.onclick = () => {
+      if(!activeId){ alert("未选择日志。"); return; }
+      const it = byId(activeId); if(!it) return;
+      if(!confirm(`确定删除「${it.title || "未命名"}」？此操作不可撤销。`)) return;
+      items = items.filter(x => x.id !== activeId);
+      activeId = items[0]?.id || null;
+      saveAll(items);
+      fillForm(byId(activeId));
+      renderList();
+    };
+
+    btnDuplicate.onclick = () => {
+      const it = byId(activeId);
+      if(!it){ alert("未选择日志。"); return; }
+      const copy = JSON.parse(JSON.stringify(it));
+      copy.id = uid();
+      copy.title = (it.title || "未命名") + "（复制）";
+      copy.createdAt = Date.now();
+      copy.updatedAt = Date.now();
+      items.unshift(copy);
+      activeId = copy.id;
+      saveAll(items);
+      fillForm(copy);
+      renderList();
+    };
+
+    photoInput.onchange = async (e) => {
+      const files = [...(e.target.files || [])];
+      if(files.length === 0) return;
+      const it = byId(activeId);
+      if(!it){ alert("请先新建/选择一条日志再添加照片。"); return; }
+      const maxAdd = Math.max(0, 12 - (it.photos?.length || 0));
+      const chosen = files.slice(0, maxAdd);
+      for(const f of chosen){
+        const dataUrl = await compressImageToDataURL(f, 1400, 0.82);
+        it.photos = it.photos || [];
+        it.photos.push(dataUrl);
+      }
+      it.updatedAt = Date.now();
+      saveAll(items);
+      renderPhotos(it);
+      renderList();
+      photoInput.value = "";
+    };
+
+    btnClearPhotos.onclick = () => {
+      const it = byId(activeId);
+      if(!it){ alert("未选择日志。"); return; }
+      if(!confirm("确定清空当前日志的所有照片？")) return;
+      it.photos = [];
+      it.updatedAt = Date.now();
+      saveAll(items);
+      renderPhotos(it);
+      renderList();
+    };
+
+    function compressImageToDataURL(file, maxSide=1400, quality=0.82){
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = reject;
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            let {width:w, height:h} = img;
+            const scale = Math.min(1, maxSide / Math.max(w,h));
+            w = Math.round(w * scale);
+            h = Math.round(h * scale);
+            const canvas = document.createElement("canvas");
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, w, h);
+            const dataUrl = canvas.toDataURL("image/jpeg", quality);
+            resolve(dataUrl);
+          };
+          img.onerror = reject;
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    [qEl, sortEl, tagFilterEl].forEach(el => el.addEventListener("input", renderList));
+    [sortEl, tagFilterEl].forEach(el => el.addEventListener("change", renderList));
+
+    btnExport.onclick = () => {
+      const data = JSON.stringify(items, null, 2);
+      const blob = new Blob([data], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "travel-journal-backup.json";
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    };
+
+    fileImport.onchange = async (e) => {
+      const file = e.target.files?.[0];
+      if(!file) return;
+      try{
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if(!Array.isArray(data)) throw new Error("JSON 必须是数组格式");
+        const cleaned = data.map(x => ({
+          id: x.id || uid(),
+          title: x.title || "未命名日志",
+          date: x.date || "",
+          place: x.place || "",
+          rating: Number(x.rating || 5),
+          tags: Array.isArray(x.tags) ? x.tags : [],
+          content: x.content || "",
+          photos: Array.isArray(x.photos) ? x.photos : [],
+          createdAt: x.createdAt || Date.now(),
+          updatedAt: x.updatedAt || Date.now(),
+        }));
+        items = cleaned;
+        activeId = items[0]?.id || null;
+        saveAll(items);
+        fillForm(byId(activeId));
+        renderList();
+        toast("导入成功 ✅");
+      }catch(err){
+        alert("导入失败：" + err.message);
+      }finally{
+        fileImport.value = "";
+      }
+    };
+
+    btnReset.onclick = () => {
+      if(!confirm("确定清空所有日志？建议先导出备份。")) return;
+      items = []; activeId = null;
+      saveAll(items);
+      fillForm(null);
+      renderList();
+    };
+
+    let toastTimer = null;
+    function toast(msg){
+      let el = document.getElementById("toast");
+      if(!el){
+        el = document.createElement("div");
+        el.id = "toast";
+        el.style.position = "fixed";
+        el.style.left = "50%";
+        el.style.bottom = "18px";
+        el.style.transform = "translateX(-50%)";
+        el.style.padding = "10px 12px";
+        el.style.borderRadius = "12px";
+        el.style.border = "1px solid rgba(106,166,255,.45)";
+        el.style.background = "rgba(18,26,43,.92)";
+        el.style.boxShadow = "0 12px 30px rgba(0,0,0,.35)";
+        el.style.zIndex = 9999;
+        el.style.color = "var(--text)";
+        el.style.fontWeight = "700";
+        document.body.appendChild(el);
+      }
+      el.textContent = msg;
+      el.style.opacity = "1";
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.style.opacity = "0", 1600);
+    }
+
+    ensureActive();
+    updateStorageBadge();
+    fillForm(byId(activeId));
+    renderList();
+
+    if(items.length === 0){
+      items = [{
+        id: uid(),
+        title: "示例：新加坡周末小旅行",
+        date: "2026-01-01",
+        place: "新加坡",
+        rating: 5,
+        tags: ["周末","美食","拍照"],
+        content:
+`行程：
+- 上午：滨海湾花园走走（建议早去，人少好拍）
+- 中午：老巴刹吃沙爹
+- 下午：国家美术馆
+
+心得：
+- 带伞！天气说变就变。
+- 想拍夜景，记得提前查灯光秀时间。
+
+踩雷：
+- 太晚去热门餐厅要排很久，建议错峰。`,
+        photos: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }];
+      activeId = items[0].id;
+      saveAll(items);
+      fillForm(byId(activeId));
+      renderList();
+    }
+  
+/* ===== 自定义头像 ===== */
+const avatarKey = "mie_mie_avatar";
+const avatarInput = document.getElementById("avatarInput");
+const avatarImg = document.getElementById("avatarImg");
+
+function loadAvatar(){
+  const saved = localStorage.getItem(avatarKey);
+  if(saved){
+    avatarImg.src = saved;
+    avatarImg.style.display = "block";
+  }
+}
+avatarInput.addEventListener("change", async (e)=>{
+  const file = e.target.files?.[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    localStorage.setItem(avatarKey, reader.result);
+    avatarImg.src = reader.result;
+    avatarImg.style.display = "block";
+  };
+  reader.readAsDataURL(file);
+});
+loadAvatar();
+
+</script>
+
+<!-- Mobile bottom navigation -->
+  <nav class="mnav" id="mnav" aria-label="页面导航">
+    <button type="button" class="mnavBtn" data-view="list">📚 列表</button>
+    <button type="button" class="mnavBtn" data-view="edit">✍️ 编辑</button>
+  </nav>
+
+<script>
+  (function(){
+    const wrap = document.querySelector(".wrap");
+    const root = document.documentElement;
+
+    // Theme
+    const THEME_KEY = "mie_theme_v1";
+    const applyTheme = (t) => {
+      if(!t) { root.removeAttribute("data-theme"); return; }
+      root.setAttribute("data-theme", t);
+    };
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    if(savedTheme) applyTheme(savedTheme);
+
+    const btnTheme = document.getElementById("btnTheme");
+    if(btnTheme){
+      btnTheme.addEventListener("click", () => {
+        const cur = root.getAttribute("data-theme");
+        const next = cur === "light" ? "" : "light";
+        if(next) localStorage.setItem(THEME_KEY, next);
+        else localStorage.removeItem(THEME_KEY);
+        applyTheme(next);
+      });
+    }
+
+    // Mobile view switch
+    const VIEW_KEY = "mie_view_v1";
+    const setView = (v) => {
+      if(!wrap) return;
+      wrap.dataset.view = v;
+      localStorage.setItem(VIEW_KEY, v);
+      // update active state
+      document.querySelectorAll(".mnavBtn").forEach(b=>{
+        b.classList.toggle("primary", b.dataset.view === v);
+      });
+    };
+
+    // Default: list on mobile, keep desktop as-is
+    const mq = window.matchMedia("(max-width: 860px)");
+    const initView = () => {
+      if(!mq.matches) return; // desktop
+      const saved = localStorage.getItem(VIEW_KEY) || "list";
+      setView(saved);
+    };
+    initView();
+    mq.addEventListener?.("change", initView);
+
+    // Bottom nav clicks
+    document.getElementById("mnav")?.addEventListener("click", (e)=>{
+      const btn = e.target.closest(".mnavBtn");
+      if(!btn) return;
+      setView(btn.dataset.view);
+    });
+
+    // Smart switching: when creating / opening an entry, go edit on mobile
+    const goEdit = () => { if(mq.matches) setView("edit"); };
+    const goList = () => { if(mq.matches) setView("list"); };
+
+    document.getElementById("btnNew")?.addEventListener("click", goEdit, true);
+    document.getElementById("list")?.addEventListener("click", (e)=>{
+      if(e.target.closest(".item")) goEdit();
+    }, true);
+
+    // After save, return to list on mobile (feel free to change)
+    document.getElementById("btnSave")?.addEventListener("click", ()=>{
+      setTimeout(goList, 250);
+    }, true);
+
+    // Register service worker (PWA)
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch(()=>{});
+    }
+  })();
+</script>
+</body>
+</html>
